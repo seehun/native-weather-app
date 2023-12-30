@@ -1,16 +1,25 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, ScrollView, Dimensions } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import * as Location from "expo-location";
+
+const API_KEY = "4cbb0083ff582a2852615efb78883ddb";
 
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
 export default function App() {
   const [city, setCity] = useState("loading...");
-  const [location, setLocation] = useState();
+  const [days, setDays] = useState([]);
   const [ok, setOk] = useState(true);
 
-  const ask = async () => {
+  const getWeather = async () => {
     const { granted } = await Location.requestForegroundPermissionsAsync();
     if (!granted) {
       setOk(false);
@@ -25,13 +34,31 @@ export default function App() {
       },
       { useGoogleMaps: false }
     );
-    console.log(location);
-    console.log(location[0].city);
+
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
+    );
+    const { list } = await response.json();
+    // console.log(list);
+
+    const filterd_list = list.filter((weather) => {
+      if (weather.dt_txt.includes("00:00:00")) {
+        return weather;
+      }
+    });
+    // console.log(filterd_list);
+    setDays(filterd_list);
+    // console.log(days);
+
+    // console.log(location);
+    // console.log(location[0].city);
     setCity(location[0].city);
   };
   useEffect(() => {
-    ask();
+    getWeather();
   }, []);
+
+  console.log(days);
   return (
     <View style={styles.container}>
       <StatusBar style={styles.statusBar} />
@@ -45,18 +72,28 @@ export default function App() {
         horizontal
         pagingEnabled
       >
-        <View style={styles.day}>
-          <Text style={styles.temp}>27</Text>
-          <Text style={styles.description}>sunny</Text>
-        </View>
-        <View style={styles.day}>
-          <Text style={styles.temp}>27</Text>
-          <Text style={styles.description}>sunny</Text>
-        </View>
-        <View style={styles.day}>
-          <Text style={styles.temp}>27</Text>
-          <Text style={styles.description}>sunny</Text>
-        </View>
+        {days.length === 0 ? (
+          <View style={styles.day}>
+            <ActivityIndicator
+              size="large"
+              color="white"
+              style={{ marginTop: 10 }}
+            />
+          </View>
+        ) : (
+          days.map((day, index) => (
+            <View key={index} style={styles.day}>
+              <Text style={styles.date}>
+                {new Date(day.dt * 1000).toDateString()}
+              </Text>
+              <Text style={styles.temp}>
+                {parseFloat(day.main.temp).toFixed(1)}
+              </Text>
+              <Text style={styles.description}>{day.weather[0].main}</Text>
+              <Text style={styles.tinyText}>{day.weather[0].description}</Text>
+            </View>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -83,6 +120,9 @@ const styles = StyleSheet.create({
     width: windowWidth,
     alignItems: "center",
   },
+  date: {
+    fontSize: 30,
+  },
   temp: {
     marginTop: 50,
     fontSize: 178,
@@ -90,5 +130,8 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 68,
     marginTop: -30,
+  },
+  tinyText: {
+    fontSize: 20,
   },
 });
