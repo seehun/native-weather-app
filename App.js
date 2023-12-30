@@ -9,8 +9,19 @@ import {
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import * as Location from "expo-location";
+import { Fontisto } from "@expo/vector-icons";
 
 const API_KEY = "4cbb0083ff582a2852615efb78883ddb";
+
+const icons = {
+  Clear: "day-sunny",
+  Clouds: "cloudy",
+  Rain: "rain",
+  Atmosphere: "cloudy-gusts",
+  Snow: "snow",
+  Drizzle: "day-rain",
+  Thunderstorm: "lightning",
+};
 
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
@@ -47,7 +58,6 @@ export default function App() {
       }
     });
     // console.log(filterd_list);
-    setDays(filterd_list);
     // console.log(days);
 
     // console.log(location);
@@ -57,7 +67,6 @@ export default function App() {
   useEffect(() => {
     getWeather();
   }, []);
-
   console.log(days);
   return (
     <View style={styles.container}>
@@ -73,7 +82,7 @@ export default function App() {
         pagingEnabled
       >
         {days.length === 0 ? (
-          <View style={styles.day}>
+          <View style={{ ...styles.day, alignItems: "center" }}>
             <ActivityIndicator
               size="large"
               color="white"
@@ -86,9 +95,17 @@ export default function App() {
               <Text style={styles.date}>
                 {new Date(day.dt * 1000).toDateString()}
               </Text>
-              <Text style={styles.temp}>
-                {parseFloat(day.main.temp).toFixed(1)}
-              </Text>
+              <View style={styles.main}>
+                <Text style={styles.temp}>
+                  {parseFloat(day.main.temp).toFixed(1)}
+                </Text>
+                <Fontisto
+                  name={icons[day.weather[0].main]}
+                  size={68}
+                  color="black"
+                />
+              </View>
+
               <Text style={styles.description}>{day.weather[0].main}</Text>
               <Text style={styles.tinyText}>{day.weather[0].description}</Text>
             </View>
@@ -114,24 +131,36 @@ const styles = StyleSheet.create({
     color: "black",
     fontSize: 68,
     fontWeight: "500",
+    color: "white",
   },
   weather: {},
+
   day: {
     width: windowWidth,
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   date: {
     fontSize: 30,
+    color: "white",
+  },
+  main: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
   },
   temp: {
     marginTop: 50,
-    fontSize: 178,
+    fontSize: 120,
+    color: "white",
   },
   description: {
-    fontSize: 68,
+    fontSize: 35,
     marginTop: -30,
+    color: "white",
   },
   tinyText: {
     fontSize: 20,
+    color: "white",
   },
 });
